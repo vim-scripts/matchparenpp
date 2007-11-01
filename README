@@ -1,0 +1,12 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=2059
+
+Improves over standard matchparen.vim plugin by echoing line containing matching bracket in the status line so you can quickly see which block is terminated by this paren.  Also scans for braces/parens which are off-screen.
+
+If you write functions or blocks like this:
+if (condition)
+{
+    ...
+}
+the plugin will echo the line "if (condition)" and not the lone "{".
+By default, the plugin scans the line containing the opening brace and the two lines above that, looking for the statement that begins the block, be it a loop or function definition.  If you want more or less, set it in the variable g:MP_stmt_thresh.
+
