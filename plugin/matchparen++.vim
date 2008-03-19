@@ -3,10 +3,18 @@
 "                line containing matching paren in status line
 " Original Author:  Bram Moolenaar <Bram@vim.org>
 " Maintainer:    Erik Falor <ewfalor@gmail.com>
-" Last Change:   2007 Nov 05
-" Version:       0.1.99
+" Last Change:   2008 Mar 19
+" Version:       1.0.1
 "
 " Changes {{{
+" 1.0.1 2008-03-19
+"   Catch exception when searchpairpos doesn't accept a timeout argument;
+"   Use old flavor of searchpairpos() instead.
+"
+" 1.0 2008-03-17
+"   Using timeout feature of searchpairpos() to avoid a long delay while
+"   finding a matching paren.  Borrowed from Bram's patch #7.1.269.
+"
 " 0.1.99 2007-11-05
 "   Using Bram's matchparen.vim plugin from standard distribution as starting point 
 "   for this version.  
@@ -48,9 +56,11 @@
 " - the original matchparen.vim plugin was already loaded
 " - when 'compatible' is set
 " - the "CursorMoved" autocmd event is not availble.
-if exists("g:loaded_matchparen") || &cp || !exists("##CursorMoved")
+" - Vim version doesn't support exception handling
+if exists("g:loaded_matchparen") || &cp || !exists("##CursorMoved") || v:version < 700
 	finish
 endif
+
 let g:loaded_matchparen = 1
 
 augroup matchparen
@@ -83,7 +93,8 @@ function! s:Highlight_Matching_Pair() "{{{
 	endif
 
 	" Avoid that we remove the popup menu.
-	if pumvisible()
+	" Return when there are no colors (looks like the cursor jumps).
+	if pumvisible() || (&t_Co < 8 && !has("gui_running"))
 		return
 	endif
 
@@ -112,10 +123,12 @@ function! s:Highlight_Matching_Pair() "{{{
 	if i % 2 == 0
 		let s_flags = 'nW'
 		let c2 = plist[i + 1]
+		let stopline = line('$')
 	else
 		let s_flags = 'nbW'
 		let c2 = c
 		let c = plist[i - 1]
+		let stopline = 0
 	endif
 	if c == '['
 		let c = '\['
@@ -134,7 +147,13 @@ function! s:Highlight_Matching_Pair() "{{{
 				\ '=~?  "string\\|character\\|singlequote\\|comment"'
 	execute 'if' s_skip '| let s_skip = 0 | endif'
 
-	let [m_lnum, m_col] = searchpairpos(c, '', c2, s_flags, s_skip) ", stopline)
+	" Borrowed from patch 7.1.269
+	" Limit the search time to 500 msec to avoid a hang on very long lines.
+	try
+		let [m_lnum, m_col] = searchpairpos(c, '', c2, s_flags, s_skip, stopline, 500)
+	catch /E118/ "when searchpairpos() doesn't take a seventh argument
+		let [m_lnum, m_col] = searchpairpos(c, '', c2, s_flags, s_skip, stopline)
+	endtry
 
 	if before > 0
 		call winrestview(save_cursor)
