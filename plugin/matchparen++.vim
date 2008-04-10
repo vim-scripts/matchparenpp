@@ -3,10 +3,14 @@
 "                line containing matching paren in status line
 " Original Author:  Bram Moolenaar <Bram@vim.org>
 " Maintainer:    Erik Falor <ewfalor@gmail.com>
-" Last Change:   2008 Mar 19
-" Version:       1.0.1
+" Last Change:   2008 Apr 10
+" Version:       1.0.2
 "
 " Changes {{{
+" 1.0.2 2008-04-10
+"   DoMatchParen command re-loads this plugin instead of matchparen.vim.
+"   Thanks to James Marshall for this idea.
+"
 " 1.0.1 2008-03-19
 "   Catch exception when searchpairpos doesn't accept a timeout argument;
 "   Use old flavor of searchpairpos() instead.
@@ -257,7 +261,7 @@ endfunction "}}}
 
 " Define commands that will disable and enable the plugin. {{{
 command! NoMatchParen 3match none | unlet! g:loaded_matchparen | au! matchparen
-command! DoMatchParen runtime plugin/matchparen.vim | doau CursorMoved
+command! DoMatchParen runtime plugin/matchparen++.vim | doau CursorMoved
 "}}}
 
 "}}}
